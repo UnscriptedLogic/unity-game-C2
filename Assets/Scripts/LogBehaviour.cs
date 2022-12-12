@@ -30,5 +30,7 @@ public class LogBehaviour : MonoBehaviour
             Debug.Log("Logging has been switched off. Enjoy the empty console! :D");
             return;
         }
+
+        Log.topicsToLog = topics;
     }
 }
