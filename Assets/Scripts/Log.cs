@@ -6,9 +6,11 @@ public static class Log
 {
     public static string[] topicsToLog;
 
+    public const string AWS_TOPIC = "aws";
+
     public static void Print(string message, string topic, string source = "")
     {
-        if (source != null)
+        if (source != "")
         {
             message += $" | {source}";
         }

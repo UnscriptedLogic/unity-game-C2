@@ -402,7 +402,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeToLog: 4
   topics:
-  - AWSManager
+  - aws
 --- !u!1 &735444496
 GameObject:
   m_ObjectHideFlags: 0
