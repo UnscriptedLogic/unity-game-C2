@@ -1,15 +1,9 @@
-using Amazon.Runtime.Internal;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.XR;
 
 public class AWSManager : MonoBehaviour
 {
@@ -49,16 +43,7 @@ public class AWSManager : MonoBehaviour
 
     private string rootURL = "https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com";
 
-    private void Start()
-    {
-        //StartCoroutine(Upload());
-        //StartCoroutine(GetAllUsers());
-        //StartCoroutine(GetUserByName("HelloFromUnity"));
-
-        StartCoroutine(DeleteUserByUsername("HelloFromUnity"));
-    }
-    
-    private IEnumerator SendAWSWebRequest(string route, WWWForm form, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnFailure = null)
+    private IEnumerator SendAWSWebRequest(string route, WWWForm form, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnFailure = null, Action<UnityWebRequest> OnAny = null)
     {
         using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/{route}", form))
         {
@@ -68,17 +53,23 @@ public class AWSManager : MonoBehaviour
 
             yield return request.SendWebRequest();
 
+            if (OnAny != null)
+                OnAny(request);
+            
             if (request.result != UnityWebRequest.Result.Success)
             {
-                OnFailure(request);
+                if (OnFailure != null)
+                    OnFailure(request);
             }
             else
             {
-                OnSuccess(request);
+                if (OnSuccess != null)
+                    OnSuccess(request);
             }
         }
     }
 
+    #region User Methods
     private IEnumerator DeleteUserByUsername(string username)
     {
         bool userExists = false;
@@ -87,7 +78,7 @@ public class AWSManager : MonoBehaviour
         getUserForm.AddField("operation", "getOne");
         getUserForm.AddField("username", username);
 
-        yield return StartCoroutine(SendAWSWebRequest("users", getUserForm, OnSuccess: res => { userExists = true; }, OnFailure: err => { userExists = false; }));
+        yield return StartCoroutine(GetUserByName(username: username, OnSuccess: res => userExists = true));
 
         if (!userExists)
         {
@@ -105,108 +96,46 @@ public class AWSManager : MonoBehaviour
         }));
     }
 
-    private IEnumerator GetUserByName(string username)
+    private IEnumerator GetUserByName(string username, Action<string> OnSuccess = null, Action<string> OnFailure = null)
     {
         WWWForm form = new WWWForm();
         form.AddField("operation", "getOne");
         form.AddField("username", username);
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/users", form))
-        {
-            request.SetRequestHeader("Content-Type", "application/data");
-            request.SetRequestHeader("Accept", "*/*");
-            request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
-
-            yield return request.SendWebRequest();
-
-            Debug.Log(request.downloadHandler.text);
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Log.Print(request.error, Log.AWS_TOPIC, name);
-            }
-            else
-            {
-                Log.Print(request.downloadHandler.text, Log.AWS_TOPIC, name);
-            }
-        }
+        yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.ToString()), OnFailure: res => OnFailure(res.downloadHandler.ToString())));
     }
-    
-    private IEnumerator GetAllUsers()
+
+    private IEnumerator GetAllUsers(Action<string> OnSuccess = null, Action<string> OnFailure = null)
     {
         WWWForm form = new WWWForm();
         form.AddField("operation", "get");
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/users", form))
-        {
-            request.SetRequestHeader("Content-Type", "application/data");
-            request.SetRequestHeader("Accept", "*/*");
-            request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
-
-            yield return request.SendWebRequest();
-
-            Debug.Log(request.downloadHandler.text);
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Log.Print(request.error, Log.AWS_TOPIC, name);
-            }
-            else
-            {
-                Log.Print(request.downloadHandler.text, Log.AWS_TOPIC, name);
-            }
-        }
+        yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.ToString()), OnFailure: res => OnFailure(res.downloadHandler.ToString())));
     }
 
-    private IEnumerator Upload()
+    private IEnumerator CreateUser(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null)
     {
-        string dynamoItems = JsonConvert.SerializeObject(new UserPayload("HelloFromUnity", "password", "admin", "somelink", "0", "0", "0"));
+        bool userExists = false;
+
+        WWWForm getUserForm = new WWWForm();
+        getUserForm.AddField("operation", "getOne");
+        getUserForm.AddField("username", userPayload.username);
+
+        yield return StartCoroutine(GetUserByName(username: userPayload.username, OnSuccess: res => userExists = true));
+
+        if (userExists)
+        {
+            Log.Print("User with that username already exists!", Log.AWS_TOPIC_ERRORS, name);
+            yield break;
+        }
+
+        string dynamoItems = JsonConvert.SerializeObject(userPayload);
 
         WWWForm form = new WWWForm();
         form.AddField("operation", "create");
         form.AddField("userpayload", dynamoItems);
 
-        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/users", form))
-        {
-            request.SetRequestHeader("Content-Type", "application/data");
-            request.SetRequestHeader("Accept", "*/*");
-            request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
-
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Log.Print(request.error, Log.AWS_TOPIC, name);
-            }
-            else
-            {
-                Log.Print(request.downloadHandler.text, Log.AWS_TOPIC, name);
-            }
-        }
-    }
-
-    private void DebugHeaders(Dictionary<string, string> headers)
-    {
-        string responseHeaders = "Response Headers: \n";
-        foreach (KeyValuePair<string, string> header in headers)
-        {
-            responseHeaders += $"{header.Key} : {header.Value}\n";
-        }
-        Log.Print(responseHeaders, Log.AWS_TOPIC);
-    }
-
-
-    //private IEnumerator LoadAsset(string url, string assetName)
-    //{
-    //    using (UnityWebRequest webRequest = new UnityWebRequest(url))
-    //    {
-    //        yield return webRequest.SendWebRequest();
-    //        AssetBundle remoteBundle = DownloadHandlerAssetBundle.GetContent(webRequest);
-    //        if (remoteBundle == null)
-    //        {
-    //            Log.Print("Failed to load AssetBundle!", name);
-    //            yield break;
-    //        }
-
-    //        Instantiate(remoteBundle.LoadAsset(assetName));
-    //    }
-    //}
+        yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.ToString()), OnFailure: res => OnFailure(res.downloadHandler.ToString())));
+    } 
+    #endregion
 }
