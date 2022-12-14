@@ -7,6 +7,8 @@ public static class Log
     public static string[] topicsToLog;
 
     public const string AWS_TOPIC = "aws";
+    public const string AWS_TOPIC_SUCCESS = "aws/success";
+    public const string AWS_TOPIC_ERRORS = "aws/errors";
 
     public static void Print(string message, string topic, string source = "")
     {
@@ -22,7 +24,7 @@ public static class Log
 
         foreach (var topicToLog in topicsToLog)
         {
-            if (topicToLog == topic)
+            if (topicToLog.Contains(topic))
             {
                 Debug.Log(message);
                 return;

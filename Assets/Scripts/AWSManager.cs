@@ -53,7 +53,56 @@ public class AWSManager : MonoBehaviour
     {
         //StartCoroutine(Upload());
         //StartCoroutine(GetAllUsers());
-        StartCoroutine(GetUserByName("HelloFromUnity"));
+        //StartCoroutine(GetUserByName("HelloFromUnity"));
+
+        StartCoroutine(DeleteUserByUsername("HelloFromUnity"));
+    }
+    
+    private IEnumerator SendAWSWebRequest(string route, WWWForm form, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnFailure = null)
+    {
+        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/{route}", form))
+        {
+            request.SetRequestHeader("Content-Type", "application/data");
+            request.SetRequestHeader("Accept", "*/*");
+            request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                OnFailure(request);
+            }
+            else
+            {
+                OnSuccess(request);
+            }
+        }
+    }
+
+    private IEnumerator DeleteUserByUsername(string username)
+    {
+        bool userExists = false;
+
+        WWWForm getUserForm = new WWWForm();
+        getUserForm.AddField("operation", "getOne");
+        getUserForm.AddField("username", username);
+
+        yield return StartCoroutine(SendAWSWebRequest("users", getUserForm, OnSuccess: res => { userExists = true; }, OnFailure: err => { userExists = false; }));
+
+        if (!userExists)
+        {
+            Log.Print("User does not exist!", Log.AWS_TOPIC_ERRORS);
+            yield break;
+        }
+
+        WWWForm deleteForm = new WWWForm();
+        deleteForm.AddField("operation", "deleteOne");
+        deleteForm.AddField("username", username);
+
+        yield return StartCoroutine(SendAWSWebRequest("users", deleteForm, res =>
+        {
+            Log.Print(res.downloadHandler.text, Log.AWS_TOPIC_SUCCESS);
+        }));
     }
 
     private IEnumerator GetUserByName(string username)
@@ -123,7 +172,6 @@ public class AWSManager : MonoBehaviour
 
             yield return request.SendWebRequest();
 
-            Debug.Log(request.downloadHandler.text);
             if (request.result != UnityWebRequest.Result.Success)
             {
                 Log.Print(request.error, Log.AWS_TOPIC, name);
