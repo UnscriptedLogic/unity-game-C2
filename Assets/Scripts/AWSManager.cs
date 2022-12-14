@@ -52,9 +52,36 @@ public class AWSManager : MonoBehaviour
     private void Start()
     {
         //StartCoroutine(Upload());
-        StartCoroutine(GetAllUsers());
+        //StartCoroutine(GetAllUsers());
+        StartCoroutine(GetUserByName("HelloFromUnity"));
     }
 
+    private IEnumerator GetUserByName(string username)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("operation", "getOne");
+        form.AddField("username", username);
+
+        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/users", form))
+        {
+            request.SetRequestHeader("Content-Type", "application/data");
+            request.SetRequestHeader("Accept", "*/*");
+            request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
+
+            yield return request.SendWebRequest();
+
+            Debug.Log(request.downloadHandler.text);
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Log.Print(request.error, Log.AWS_TOPIC, name);
+            }
+            else
+            {
+                Log.Print(request.downloadHandler.text, Log.AWS_TOPIC, name);
+            }
+        }
+    }
+    
     private IEnumerator GetAllUsers()
     {
         WWWForm form = new WWWForm();
