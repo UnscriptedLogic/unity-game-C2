@@ -18,17 +18,17 @@ public class AWSManager : MonoBehaviour
         public string username;
         public string password;
         public string permission;
-        public string skinpointer;
+        public string s3_skinpointer;
         public string easymodeFastest;
         public string medmodeFastest;
         public string hardmodeFastest;
 
-        public UserPayload(string username, string password, string permission, string skinpointer, string easymodeFastest, string medmodeFastest, string hardmodeFastest)
+        public UserPayload(string username, string password, string permission, string s3_skinpointer, string easymodeFastest, string medmodeFastest, string hardmodeFastest)
         {
             this.username = username;
             this.password = password;
             this.permission = permission;
-            this.skinpointer = skinpointer;
+            this.s3_skinpointer = s3_skinpointer;
             this.easymodeFastest = easymodeFastest;
             this.medmodeFastest = medmodeFastest;
             this.hardmodeFastest = hardmodeFastest;
@@ -110,14 +110,9 @@ public class AWSManager : MonoBehaviour
     {
         string dynamoItems = JsonConvert.SerializeObject(new UserPayload("HelloFromUnity", "password", "admin", "somelink", "0", "0", "0"));
 
-        //string payload = "{\"operation\":\"create\",\"userpayload\":" + dynamoItems + "}";
-
         WWWForm form = new WWWForm();
         form.AddField("operation", "create");
         form.AddField("userpayload", dynamoItems);
-
-        //byte[] bytesToEncode = Encoding.UTF8.GetBytes(payload);
-        //string encodedPayload = Convert.ToBase64String(bytesToEncode);
 
         using (UnityWebRequest request = UnityWebRequest.Post("https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com/create-user", form))
         {
@@ -136,7 +131,6 @@ public class AWSManager : MonoBehaviour
             {
                 Log.Print(request.downloadHandler.text, Log.AWS_TOPIC, name);
             }
-
         }
     }
 
