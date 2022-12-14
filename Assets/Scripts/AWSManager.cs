@@ -51,60 +51,34 @@ public class AWSManager : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(Upload());
+        //StartCoroutine(Upload());
+        StartCoroutine(GetAllUsers());
     }
 
-    //private IEnumerator GetAllUsers()
-    //{
-    //    string userPayload = JsonConvert.SerializeObject(new PayLoad("create", new UserPayload("HelloFromUnity", "password", "admin", "pointer", 0, 0, 0)));
-    //    using (UnityWebRequest request = UnityWebRequest.Get($"{rootURL}/get-all-users"))
-    //    {
-    //        request.SetRequestHeader("Content-Type", "application/json");
-    //        request.SetRequestHeader("Accept", "*/*");
-    //        request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
+    private IEnumerator GetAllUsers()
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("operation", "get");
 
-    //        yield return request.SendWebRequest();
+        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/users", form))
+        {
+            request.SetRequestHeader("Content-Type", "application/data");
+            request.SetRequestHeader("Accept", "*/*");
+            request.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
 
-    //        DebugHeaders(request.GetResponseHeaders());
+            yield return request.SendWebRequest();
 
-    //        if (request.result != UnityWebRequest.Result.Success)
-    //        {
-    //            Log.Print(request.error, Log.AWS_TOPIC, name);
-    //        }
-    //        else
-    //        {
-    //            Log.Print(request.result.ToString(), Log.AWS_TOPIC, name);
-    //        }
-
-    //    }
-    //}
-
-    //private IEnumerator Upload()
-    //{
-    //    string dynamoItems = "{\"username\":\"HelloFromUnity\",\"password\":\"password\",\"permission\":\"admin\",\"skinpointer\":\"pointer\",\"easymodeFastest\":0,\"medmodeFastest\":0,\"hardmodeFastest\":0}";
-
-    //    WWWForm form = new WWWForm();
-    //    form.AddField("operation", "create");
-    //    form.AddField("userPayload", dynamoItems);
-
-    //    HttpWebRequest request = WebRequest.Create("https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com/create-user") as HttpWebRequest;
-    //    request.Proxy = new WebProxy("localhost", 8443);
-
-    //    using (UnityWebRequest webRequest = UnityWebRequest.Post("https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com/create-user", form, ))
-    //    {
-    //        yield return webRequest.SendWebRequest();
-
-    //        if (webRequest.result != UnityWebRequest.Result.Success)
-    //        {
-    //            Log.Print(webRequest.error, Log.AWS_TOPIC, name);
-    //        }
-    //        else
-    //        {
-    //            Log.Print(webRequest.downloadHandler.text, Log.AWS_TOPIC, name);
-    //        }
-
-    //    }
-    //}
+            Debug.Log(request.downloadHandler.text);
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Log.Print(request.error, Log.AWS_TOPIC, name);
+            }
+            else
+            {
+                Log.Print(request.downloadHandler.text, Log.AWS_TOPIC, name);
+            }
+        }
+    }
 
     private IEnumerator Upload()
     {
@@ -114,7 +88,7 @@ public class AWSManager : MonoBehaviour
         form.AddField("operation", "create");
         form.AddField("userpayload", dynamoItems);
 
-        using (UnityWebRequest request = UnityWebRequest.Post("https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com/create-user", form))
+        using (UnityWebRequest request = UnityWebRequest.Post($"{rootURL}/users", form))
         {
             request.SetRequestHeader("Content-Type", "application/data");
             request.SetRequestHeader("Accept", "*/*");
