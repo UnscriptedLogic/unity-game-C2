@@ -10,7 +10,7 @@ public static class Log
     public const string AWS_TOPIC_SUCCESS = "aws/success";
     public const string AWS_TOPIC_ERRORS = "aws/errors";
 
-    public static void Print(string message, string topic, string source = "")
+    public static void Print(string message, string topic, string source = "", Object context = null)
     {
         if (source != "")
         {
@@ -24,9 +24,9 @@ public static class Log
 
         foreach (var topicToLog in topicsToLog)
         {
-            if (topicToLog.Contains(topic))
+            if (topicToLog == topic)
             {
-                Debug.Log(message);
+                Debug.Log(message, context);
                 return;
             }
         }

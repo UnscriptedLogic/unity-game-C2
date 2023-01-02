@@ -1,0 +1,7 @@
+ManifestFileVersion: 0
+CRC: 150126823
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: rapidtowerasset
+      Dependencies: {}

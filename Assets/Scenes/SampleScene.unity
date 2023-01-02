@@ -402,6 +402,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeToLog: 4
   topics:
+  - aws/errors
+  - aws/success
   - aws
 --- !u!1 &735444496
 GameObject:
@@ -514,8 +516,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 669c3e0c1f8fd924c8fa15ebbe714afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  URL: https://c2-skins-bucket.s3.amazonaws.com/upg_rapid2.fbx
-  assetName: rapid
+  username: HandCreated
+  password: mynewpassword
+  permission: admin
+  s3_skinpointer: link
+  easy: 0
+  med: 0
+  hard: 0
+  timing: 0
+  objectLink: https://c2-skins-bucket.s3.amazonaws.com/rapidtowerasset
 --- !u!4 &1782329943
 Transform:
   m_ObjectHideFlags: 0
