@@ -3,6 +3,10 @@ using UnityEngine;
 using Newtonsoft.Json;
 using System.Collections;
 using UnityEngine.Networking;
+using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+using UnityEngine.Windows;
 
 public class AWSManager : MonoBehaviour
 {
@@ -35,7 +39,7 @@ public class AWSManager : MonoBehaviour
         Hard
     }
 
-    private struct LeaderboardPayload
+    public struct LeaderboardPayload
     {
         public string mode;
         public string username;
@@ -91,21 +95,21 @@ public class AWSManager : MonoBehaviour
 
     [SerializeField] private string objectLink = "https://c2-skins-bucket.s3.amazonaws.com/upg_rapid2.fbx";
 
-    private void Start()
-    {
-        //UserPayload userPayload = new UserPayload(username, password, permission, s3_skinpointer, easy, med, hard);
-        //StartCoroutine(UpdateUserByUsername(userPayload, res =>
-        //{
-        //    Debug.Log(res);
-        //}, err =>
-        //{
-        //    Debug.Log(err);
-        //}));
+    public static AWSManager instance;
 
-        StartCoroutine(GetAllLeaderboardScore(new LeaderboardPayload(mode: DifficultyMode.Medium)));
+    private void Awake()
+    {
+        instance = this;
     }
 
-    private IEnumerator InstantiateObjectFromS3(string objectLink)
+    private void Start()
+    {
+        //StartCoroutine(GetAllLeaderboardScore(new LeaderboardPayload(mode: DifficultyMode.Medium)));
+        //StartCoroutine(GetItemWithName("defaultskin", res => Debug.Log(res.downloadHandler.text), err => Debug.Log(err.downloadHandler.text)));
+        StartCoroutine(GetAllItems(res => Debug.Log(res), err => Debug.Log(err.downloadHandler.text)));
+    }
+
+    private IEnumerator InstantiateObjectFromS3(string objectLink, string objectName)
     {
         UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(objectLink);
         www.downloadHandler = new DownloadHandlerAssetBundle(www.url, 0);
@@ -127,7 +131,7 @@ public class AWSManager : MonoBehaviour
         if (assetBundle != null)
         {
             Debug.Log(assetBundle);
-            GameObject prefab = assetBundle.LoadAsset<GameObject>("upg_rapid2");
+            GameObject prefab = assetBundle.LoadAsset<GameObject>(objectName);
             if (prefab != null)
             {
                 Instantiate(prefab);
@@ -328,7 +332,7 @@ public class AWSManager : MonoBehaviour
         }));
     }
 
-    private IEnumerator GetAllLeaderboardScore(LeaderboardPayload leaderboardPayload, Action OnSuccess = null, Action OnError = null)
+    public IEnumerator GetAllLeaderboardScore(LeaderboardPayload leaderboardPayload, Action<JArray> OnSuccess = null, Action<UnityWebRequest> OnError = null)
     {
         WWWForm form = new WWWForm();
         form.AddField("operation", "getAll");
@@ -336,17 +340,18 @@ public class AWSManager : MonoBehaviour
 
         yield return StartCoroutine(SendAWSWebRequest("leaderboard-easy", form, res =>
         {
-            Debug.Log(res.downloadHandler.text);
-
             if (OnSuccess != null)
-                OnSuccess?.Invoke();
+            {
+                string result = res.downloadHandler.text.Substring(1, res.downloadHandler.text.Length - 2);
+
+                JArray jsonArray = JArray.Parse(res.downloadHandler.text);
+                OnSuccess?.Invoke(jsonArray);
+            }
 
         }, err =>
         {
-            Debug.Log(err.downloadHandler.text);
-
             if (OnError != null)
-                OnError?.Invoke();
+                OnError?.Invoke(err);
         }));
     }
 
@@ -397,5 +402,49 @@ public class AWSManager : MonoBehaviour
                 OnError?.Invoke();
         }));
     }
+    #endregion
+
+    #region Items
+
+    private IEnumerator GetItemWithName(string name, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnError = null)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("operation", "get");
+        form.AddField("name", name);
+
+        yield return StartCoroutine(SendAWSWebRequest("items", form, res =>
+        {
+            if (OnSuccess != null)
+                OnSuccess?.Invoke(res);
+
+        }, err =>
+        {
+            if (OnError != null)
+                OnError?.Invoke(err);
+        }));
+    }
+
+    public IEnumerator GetAllItems(Action<JArray> OnSuccess = null, Action<UnityWebRequest> OnError = null)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("operation", "getAll");
+
+        yield return StartCoroutine(SendAWSWebRequest("items", form, res =>
+        {
+            if (OnSuccess != null)
+            {
+                string result = res.downloadHandler.text.Substring(1, res.downloadHandler.text.Length - 2);
+
+                JArray jsonArray = JArray.Parse(res.downloadHandler.text);
+                OnSuccess?.Invoke(jsonArray);
+            }
+
+        }, err =>
+        {
+            if (OnError != null)
+                OnError?.Invoke(err);
+        }));
+    }
+
     #endregion
 }

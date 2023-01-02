@@ -1,7 +1,10 @@
 ManifestFileVersion: 0
-CRC: 150126823
+CRC: 1240323255
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: rapidtowerasset
+      Name: defaultskin
+      Dependencies: {}
+    Info_1:
+      Name: orangedefault
       Dependencies: {}
