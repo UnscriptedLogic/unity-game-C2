@@ -1,0 +1,31 @@
+ManifestFileVersion: 0
+CRC: 1468397431
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 4c993c7750a1eb3eb857c0de6c4d82ff
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: b1aa6df91bbe11e3502ec02fe09bdf83
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Prefabs/DefaultSkin.prefab
+Dependencies: []

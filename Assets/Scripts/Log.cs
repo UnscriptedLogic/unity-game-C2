@@ -7,8 +7,10 @@ public static class Log
     public static string[] topicsToLog;
 
     public const string AWS_TOPIC = "aws";
+    public const string AWS_TOPIC_SUCCESS = "aws/success";
+    public const string AWS_TOPIC_ERRORS = "aws/errors";
 
-    public static void Print(string message, string topic, string source = "")
+    public static void Print(string message, string topic, string source = "", Object context = null)
     {
         if (source != "")
         {
@@ -24,7 +26,7 @@ public static class Log
         {
             if (topicToLog == topic)
             {
-                Debug.Log(message);
+                Debug.Log(message, context);
                 return;
             }
         }
