@@ -32,24 +32,29 @@ public class UINavigator : MonoBehaviour
         return null;
     }
 
-    public static void PushPageWithIndex(int index)
+    public static GameObject PushPageWithIndex(int index)
     {
         if (index < instance.pages.Count)
         {
             instance.pages[index].SetActive(true);
             instance.navigator.Push(instance.pages[index]);
-            return;
+            return instance.pages[index];
         }
 
         Debug.Log($"The page with the index {index} is not found");
+        return null;
     }
 
-    public static void Pop()
+    public static GameObject Pop()
     {
         if (instance.navigator.Count > 0)
         {
+            GameObject page = instance.navigator.Peek();
             instance.navigator.Pop().SetActive(false);
+            return page;
         }
+
+        return null;
     }
 
     public static void PopUntil(string pageName)

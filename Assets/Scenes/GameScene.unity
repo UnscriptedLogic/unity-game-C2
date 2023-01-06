@@ -466,7 +466,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   distanceClamp: 5
-  maxPower: 200
+  maxPower: 250
   rb: {fileID: 1474441738}
   lineRenderer: {fileID: 1474441740}
   cam: {fileID: 1705433203}
