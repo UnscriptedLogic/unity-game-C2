@@ -43,7 +43,7 @@ namespace PlayerManagement
                 //i.e. the direction of the line and the length of the line in relation to
                 //the direction of the mouse to the cube and the distance of the starting drag position to the current mouse position
                 Vector3 correctedPoint = GetWorldPoint(currMousePos);
-                Vector3 difference = (transform.position - correctedPoint).normalized;
+                Vector3 difference = (GetWorldPoint(startDrag) - correctedPoint).normalized;
                 distance = Mathf.Clamp(Vector3.Distance(GetWorldPoint(startDrag), correctedPoint), -distanceClamp, distanceClamp);
                 endPoint = transform.position + (difference * distance);
                 lineRenderer.SetPosition(1, endPoint);
