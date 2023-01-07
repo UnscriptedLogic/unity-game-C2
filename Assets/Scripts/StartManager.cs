@@ -17,6 +17,11 @@ namespace LevelManagement
 
         [SerializeField] private Button startButton;
 
+        [SerializeField] private Button switchToLogin;
+        [SerializeField] private Button switchToSignUp;
+        [SerializeField] private Button submitSignUp;
+        [SerializeField] private Button submitLogIn;
+
         [SerializeField] private Button[] backToMainMenuButtons;
 
         [Header("General Settings")]
@@ -30,9 +35,15 @@ namespace LevelManagement
             string guid = PlayerPrefs.GetString("cc2_guid");
             if (string.IsNullOrEmpty(guid))
             {
-                ShowPageVert(UINavigator.Push("NewUserLogin"), 2500f);
+                ShowPageVert(UINavigator.Push("NewUserLogin"), 3000f);
+                UINavigator.Push("SignUp");
             }
 
+            InitButtons();
+        }
+
+        private void InitButtons()
+        {
             //Back buttons to the main screen
             for (int i = 0; i < backToMainMenuButtons.Length; i++)
             {
@@ -49,18 +60,31 @@ namespace LevelManagement
                 ShowPageHori(UINavigator.Push("DifficultyScreen"), -1920f);
             });
 
-            leaderboardButton.onClick.AddListener(() => 
+            leaderboardButton.onClick.AddListener(() =>
             {
                 HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                ShowPageHori(UINavigator.Push("LeaderboardPage"), 3000f);
+                ShowPageHori(UINavigator.Push("LeaderboardPage"));
             });
 
-            startButton.onClick.AddListener(() => 
+            startButton.onClick.AddListener(() =>
             {
                 ShowPageVert(UINavigator.Push("LoadingScreen"), 3000, () =>
                 {
                     SceneManager.LoadSceneAsync(1);
                 });
+            });
+
+            switchToLogin.onClick.AddListener(() =>
+            {
+                HidePageHori(UINavigator.instance.Navigator.Peek(), -4000f);
+                ShowPageHori(UINavigator.Push("LogIn"), 4000f);
+            });
+
+            switchToSignUp.onClick.AddListener(() =>
+            {
+                HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f);
+                ShowPageHori(UINavigator.Push("SignUp"), -3000f);
+
             });
         }
 
@@ -77,14 +101,14 @@ namespace LevelManagement
             });
         }
 
-        private void ShowPageHori(GameObject page, float from)
+        private void ShowPageHori(GameObject page, float from = 3000f)
         {
             float prevPos = page.transform.position.x;
             page.transform.position = new Vector3(from, page.transform.position.y, page.transform.position.z);
             LeanTween.moveX(page, prevPos, transitionSpeed).setEase(tweenType);
         }
 
-        private void HidePageHori(GameObject page, float to)
+        private void HidePageHori(GameObject page, float to = 3000f)
         {
             float prevPos = page.transform.position.x;
             LeanTween.moveX(page, to, transitionSpeed).setEase(tweenType).setOnComplete(() =>
