@@ -10,7 +10,7 @@ using UnityEngine.Windows;
 
 public class AWSManager : MonoBehaviour
 {
-    private class UserPayload
+    public class UserPayload
     {
         public string username;
         public string password;
@@ -20,7 +20,7 @@ public class AWSManager : MonoBehaviour
         public string medmodeFastest;
         public string hardmodeFastest;
 
-        public UserPayload(string username, string password, string permission, string s3_skinpointer, string easymodeFastest, string medmodeFastest, string hardmodeFastest)
+        public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "0", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
         {
             this.username = username;
             this.password = password;
@@ -275,7 +275,7 @@ public class AWSManager : MonoBehaviour
         yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.text.ToString()), OnFailure: res => OnFailure(res.downloadHandler.text.ToString())));
     }
 
-    private IEnumerator CreateUser(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null)
+    public IEnumerator CreateUser(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null)
     {
         //bool userExists = false;
 
