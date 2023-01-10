@@ -18,8 +18,9 @@ namespace PlayerManagement
         [Header("Attributes")]
         [SerializeField] private float distanceClamp = 5f;
         [SerializeField] private float maxPower = 200f;
-        
+
         [Header("Components")]
+        [SerializeField] private string skinName = "defaultSkin";
         [SerializeField] private Rigidbody rb;  
         [SerializeField] private LineRenderer lineRenderer;
         [SerializeField] private Camera cam;
@@ -30,6 +31,16 @@ namespace PlayerManagement
 
             inputManager.isDragging += OnDragging;
             inputManager.mousePos += InputManager_mousePos;
+
+            StartCoroutine(AWSManager.instance.GetItemWithName(skinName, res =>
+            {
+                StartCoroutine(AWSManager.instance.InstantiateObjectFromS3(res[0]["s3_skinpointer"]["S"].ToString(), skinName, transform, Vector3.zero, Quaternion.identity, go =>
+                {
+                    Destroy(go.GetComponent<BoxCollider>());
+                    go.transform.localPosition = Vector3.zero;
+                }));
+
+            }, err => Debug.Log(err.downloadHandler.text)));
         }
 
         private void Update()

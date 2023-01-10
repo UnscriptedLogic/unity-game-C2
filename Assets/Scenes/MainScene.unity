@@ -10504,12 +10504,11 @@ MonoBehaviour:
   username: HandCreated
   password: mynewpassword
   permission: admin
-  s3_skinpointer: link
-  easy: 0
+  s3_skinpointer: https://c2-skins-bucket.s3.amazonaws.com/defaultskin
+  easy: 200
   med: 0
   hard: 0
   timing: 0
-  objectLink: https://c2-skins-bucket.s3.amazonaws.com/rapidtowerasset
 --- !u!4 &1782329943
 Transform:
   m_ObjectHideFlags: 0

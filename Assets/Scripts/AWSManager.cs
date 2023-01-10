@@ -8,30 +8,30 @@ using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using UnityEngine.Windows;
 
+public class UserPayload
+{
+    public string username;
+    public string password;
+    public string permission;
+    public string s3_skinpointer;
+    public string easymodeFastest;
+    public string medmodeFastest;
+    public string hardmodeFastest;
+
+    public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
+    {
+        this.username = username;
+        this.password = password;
+        this.permission = permission;
+        this.s3_skinpointer = s3_skinpointer;
+        this.easymodeFastest = easymodeFastest;
+        this.medmodeFastest = medmodeFastest;
+        this.hardmodeFastest = hardmodeFastest;
+    }
+}
+
 public class AWSManager : MonoBehaviour
 {
-    public class UserPayload
-    {
-        public string username;
-        public string password;
-        public string permission;
-        public string s3_skinpointer;
-        public string easymodeFastest;
-        public string medmodeFastest;
-        public string hardmodeFastest;
-
-        public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "0", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
-        {
-            this.username = username;
-            this.password = password;
-            this.permission = permission;
-            this.s3_skinpointer = s3_skinpointer;
-            this.easymodeFastest = easymodeFastest;
-            this.medmodeFastest = medmodeFastest;
-            this.hardmodeFastest = hardmodeFastest;
-        }
-    }
-
     public enum DifficultyMode
     {
         Easy,
@@ -46,7 +46,7 @@ public class AWSManager : MonoBehaviour
         public int timing;
         public string s3_skinpointer;
 
-        public LeaderboardPayload(DifficultyMode mode, string username = "", int timing = 0, string s3_skinpointer = "")
+        public LeaderboardPayload(DifficultyMode mode, string username = "", int timing = 0, string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin")
         {
             switch (mode)
             {
@@ -82,20 +82,18 @@ public class AWSManager : MonoBehaviour
         }
     }
 
+    private string rootURL = "https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com";
+
+    public static AWSManager instance;
+
     [SerializeField] private string username = "HelloFromUnity";
     [SerializeField] private string password = "mypassword";
     [SerializeField] private string permission = "admin";
-    [SerializeField] private string s3_skinpointer = "link";
+    [SerializeField] private string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin";
     [SerializeField] private string easy = "0";
     [SerializeField] private string med = "0";
     [SerializeField] private string hard = "0";
     [SerializeField] private int timing = 0;
-
-    private string rootURL = "https://bnnpywvfa5.execute-api.us-east-1.amazonaws.com";
-
-    [SerializeField] private string objectLink = "https://c2-skins-bucket.s3.amazonaws.com/upg_rapid2.fbx";
-
-    public static AWSManager instance;
 
     private void Awake()
     {
@@ -104,13 +102,23 @@ public class AWSManager : MonoBehaviour
 
     private void Start()
     {
+        //Users
+        //StartCoroutine(UpdateUserByUsername(new UserPayload(username, password, permission, s3_skinpointer, easy, med, hard)));
+        //StartCoroutine(DeleteUserByUsername(username));
+
+        //Leaderboards
         //StartCoroutine(GetAllLeaderboardScore(new LeaderboardPayload(mode: DifficultyMode.Medium)));
-        //StartCoroutine(GetItemWithName("defaultskin", res => Debug.Log(res.downloadHandler.text), err => Debug.Log(err.downloadHandler.text)));
-        StartCoroutine(GetAllItems(res => Debug.Log(res), err => Debug.Log(err.downloadHandler.text)));
+        //StartCoroutine(UpdateUserScore(new LeaderboardPayload(mode: DifficultyMode.Easy, username, int.Parse(easy), s3_skinpointer)));
+        //StartCoroutine(DeleteUserScore(new LeaderboardPayload(mode: DifficultyMode.Easy, username, int.Parse(easy))));
+        
+        //Items
+        //StartCoroutine(GetAllItems(res => Debug.Log(res), err => Debug.Log(err.downloadHandler.text)));
     }
 
-    private IEnumerator InstantiateObjectFromS3(string objectLink, string objectName)
+    public IEnumerator InstantiateObjectFromS3(string objectLink, string objectName, Transform parent, Vector3 position, Quaternion rotation, Action<GameObject> OnSuccess)
     {
+        Debug.Log(objectLink);
+
         UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(objectLink);
         www.downloadHandler = new DownloadHandlerAssetBundle(www.url, 0);
         www.SendWebRequest();
@@ -134,7 +142,7 @@ public class AWSManager : MonoBehaviour
             GameObject prefab = assetBundle.LoadAsset<GameObject>(objectName);
             if (prefab != null)
             {
-                Instantiate(prefab);
+                OnSuccess?.Invoke(Instantiate(prefab, position, rotation, parent));
             } else
             {
                 Debug.Log(prefab);
@@ -246,7 +254,7 @@ public class AWSManager : MonoBehaviour
         yield return StartCoroutine(CreateUser(userPayload, OnSuccess, OnFailure));
     }
 
-    private IEnumerator GetUserByName(string username, Action<string> OnSuccess = null, Action<string> OnFailure = null)
+    public IEnumerator GetUserByName(string username, Action<JArray> OnSuccess = null, Action<string> OnFailure = null)
     {
         Debug.Log($"Getting user by username: {username}...");
 
@@ -262,7 +270,10 @@ public class AWSManager : MonoBehaviour
             }
             else
             {
-                OnSuccess?.Invoke(res.downloadHandler.text);
+                string result = $"[{res.downloadHandler.text}]";
+
+                JArray jsonArray = JArray.Parse(result);
+                OnSuccess?.Invoke(jsonArray);
             }
         }));
     }
@@ -275,21 +286,25 @@ public class AWSManager : MonoBehaviour
         yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.text.ToString()), OnFailure: res => OnFailure(res.downloadHandler.text.ToString())));
     }
 
-    public IEnumerator CreateUser(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null)
+    public IEnumerator CreateUser(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null, bool checkForExisting = false)
     {
-        //bool userExists = false;
+        if (checkForExisting)
+        {
+            bool userExists = false;
 
-        //WWWForm getUserForm = new WWWForm();
-        //getUserForm.AddField("operation", "getOne");
-        //getUserForm.AddField("username", userPayload.username);
+            WWWForm getUserForm = new WWWForm();
+            getUserForm.AddField("operation", "getOne");
+            getUserForm.AddField("username", userPayload.username);
 
-        //yield return StartCoroutine(GetUserByName(username: userPayload.username, OnSuccess: res => userExists = true));
+            yield return StartCoroutine(GetUserByName(username: userPayload.username, OnSuccess: res => userExists = true));
 
-        //if (userExists)
-        //{
-        //    Log.Print("User with that username already exists!", Log.AWS_TOPIC_ERRORS, name);
-        //    yield break;
-        //}
+            if (userExists)
+            {
+                Log.Print("User with that username already exists!", Log.AWS_TOPIC_ERRORS, name);
+                OnFailure("User already exist");
+                yield break;
+            }
+        }
 
         string dynamoItems = JsonConvert.SerializeObject(userPayload);
 
@@ -305,6 +320,7 @@ public class AWSManager : MonoBehaviour
 
         yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.text.ToString()), OnFailure: res => OnFailure(res.downloadHandler.text.ToString())));
     }
+
     #endregion
 
     #region Leaderboard Methods
@@ -406,7 +422,7 @@ public class AWSManager : MonoBehaviour
 
     #region Items
 
-    private IEnumerator GetItemWithName(string name, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnError = null)
+    public IEnumerator GetItemWithName(string name, Action<JArray> OnSuccess = null, Action<UnityWebRequest> OnError = null)
     {
         WWWForm form = new WWWForm();
         form.AddField("operation", "get");
@@ -415,7 +431,10 @@ public class AWSManager : MonoBehaviour
         yield return StartCoroutine(SendAWSWebRequest("items", form, res =>
         {
             if (OnSuccess != null)
-                OnSuccess?.Invoke(res);
+            {
+                string result = $"[{res.downloadHandler.text}]";
+                OnSuccess?.Invoke(JArray.Parse(result));
+            }
 
         }, err =>
         {

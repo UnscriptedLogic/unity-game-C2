@@ -42,13 +42,22 @@ namespace LevelManagement
 
         private void Start()
         {
+            UINavigator.Push("MainScreen");
             UINavigator.Push("LoadingScreen");
 
-            string guid = PlayerPrefs.GetString("cc2_guid");
-            if (string.IsNullOrEmpty(guid))
+            string existingUsername = PlayerPrefs.GetString("cc2_username");
+            if (!string.IsNullOrEmpty(existingUsername))
             {
-                ShowPageVert(UINavigator.Push("NewUserLogin"), 3000f);
-                UINavigator.Push("SignUp");
+                //Try to sign in instead
+                LogIn(existingUsername, PlayerPrefs.GetString("cc2_password"), () =>
+                {
+                    return;
+                });
+            }
+            else
+            {
+                UINavigator.Push("NewUserLogin");
+                ShowPageVert(UINavigator.Push("SignUp"), 3000f);
             }
 
             InitButtons();
@@ -102,58 +111,142 @@ namespace LevelManagement
 
         private void InitSubmitForms()
         {
-            submitLogIn.onClick.AddListener(() =>
+            submitSignUp.onClick.AddListener(() =>
             {
+                #region Input Validation
                 string username = signupUsername.text;
                 string password = signupPassword.text;
                 string repeatPassword = signupRepeatPassword.text;
 
                 if (string.IsNullOrEmpty(username))
                 {
-                    ShowError("Please input a username");
+                    StartCoroutine(ShowFeedback("Please input a username"));
                     return;
                 }
 
                 if (string.IsNullOrEmpty(password))
                 {
-                    ShowError("Please input a password");
+                    StartCoroutine(ShowFeedback("Please input a password"));
                     return;
                 }
 
-                if (string.IsNullOrEmpty(password))
+                if (string.IsNullOrEmpty(repeatPassword))
                 {
-                    ShowError("Please input the repeat password");
+                    StartCoroutine(ShowFeedback("Please input the repeat password"));
                     return;
                 }
 
-                if (password == repeatPassword)
+                if (password != repeatPassword)
                 {
-                    ShowError("Passwords do not match!");
+                    StartCoroutine(ShowFeedback("Passwords do not match!"));
                     return;
-                }
+                } 
+                #endregion
 
-                AWSManager.UserPayload userPayload = new AWSManager.UserPayload(username, password);
+                StartCoroutine(ShowFeedback("Signing Up..."));
 
-                AWSManager.instance.CreateUser(userPayload, res =>
+                UserPayload userPayload = new UserPayload(username, password);
+                StartCoroutine(AWSManager.instance.CreateUser(checkForExisting: true, userPayload: userPayload, OnSuccess: res =>
                 {
+                    //UI Related
+                    StartCoroutine(ShowFeedback("Success"));
+                    UINavigator.PopUntil("LoadingScreen");
+
+                    //Inits static reference to the user
+                    GameManager.InitUser(userPayload);
+                    GameManager.LogIn();
+
+                    //Generates a GUID for the computer so that it may recognize subsequent log ins
+                    PlayerPrefs.SetString("cc2_username", userPayload.username);
+                    PlayerPrefs.SetString("cc2_password", userPayload.password);
+                    
+                    //Pops loading page
                     HidePageVert(UINavigator.instance.Navigator.Peek());
                     return;
-                }, err =>
+                }, OnFailure: err =>
                 {
-                    errorTMP.text = err;
-                });
+                    StartCoroutine(ShowFeedback($"Error: {err}"));
+                }));
             });
 
-            submitSignUp.onClick.AddListener(() =>
+            submitLogIn.onClick.AddListener(() =>
             {
+                #region Input Validation
 
+                string username = loginUsername.text;
+                string password = loginPassword.text;
+
+                if (string.IsNullOrEmpty(username))
+                {
+                    StartCoroutine(ShowFeedback("Please input a username"));
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(password))
+                {
+                    StartCoroutine(ShowFeedback("Please input a password"));
+                    return;
+                }
+
+                StartCoroutine(ShowFeedback("Logging In..."));
+
+                LogIn(username, password);
+
+                #endregion
             });
         }
 
-        private void ShowError(string errorText)
+        private void LogIn(string username, string password, Action OnSuccess = null, Action OnError = null)
         {
+            StartCoroutine(AWSManager.instance.GetUserByName(username, res =>
+            {
+                Debug.Log(res);
+                if (password == res[0]["password"].ToString())
+                {
+                    StartCoroutine(ShowFeedback("Welcome back! Logging you in..."));
+
+                    UserPayload userPayload = new UserPayload(
+                        username: res[0]["username"].ToString(),
+                        password: res[0]["password"].ToString(),
+                        permission: res[0]["permission"].ToString(),
+                        s3_skinpointer: res[0]["s3_skinpointer"].ToString(),
+                        easymodeFastest: res[0]["easymodeFastest"].ToString(),
+                        medmodeFastest: res[0]["medmodeFastest"].ToString(),
+                        hardmodeFastest: res[0]["hardmodeFastest"].ToString()
+                        );
+
+                    GameManager.InitUser(userPayload);
+                    GameManager.LogIn();
+
+                    PlayerPrefs.SetString("cc2_username", userPayload.username);
+                    PlayerPrefs.SetString("cc2_password", userPayload.password);
+
+                    UINavigator.PopUntil("LoadingScreen");
+                    HidePageVert(UINavigator.instance.Navigator.Peek());
+
+                    OnSuccess?.Invoke();
+                }
+                else
+                {
+                    StartCoroutine(ShowFeedback($"Error: Incorrect username or password"));
+                    OnError?.Invoke();
+                }
+            }, err =>
+            {
+                StartCoroutine(ShowFeedback($"Error: Incorrect username or password"));
+                OnError?.Invoke();
+            }));
+        }
+
+        private IEnumerator ShowFeedback(string errorText)
+        {
+            StopAllCoroutines();
+
             errorTMP.gameObject.SetActive(true);
             errorTMP.text = errorText;
+
+            yield return new WaitForSeconds(3);
+            errorTMP.gameObject.SetActive(false);
         }
 
         private void ShowPageVert(GameObject page, float from, Action OnCompleted = null)
@@ -169,13 +262,15 @@ namespace LevelManagement
             });
         }
 
-        private void HidePageVert(GameObject page, float to = 3000f)
+        private void HidePageVert(GameObject page, float to = 3000f, Action onCompleted = null)
         {
             float prevPos = page.transform.position.y;
             LeanTween.moveY(page, to, transitionSpeed).setEase(tweenType).setOnComplete(() =>
             {
                 page.SetActive(false);
                 page.transform.position = new Vector3(page.transform.position.x, prevPos, page.transform.position.z);
+
+                onCompleted?.Invoke();
             });
         }
 
