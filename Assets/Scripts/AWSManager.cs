@@ -14,16 +14,18 @@ public class UserPayload
     public string password;
     public string permission;
     public string s3_skinpointer;
+    public string coins;
     public string easymodeFastest;
     public string medmodeFastest;
     public string hardmodeFastest;
 
-    public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
+    public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin", string coins = "0", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
     {
         this.username = username;
         this.password = password;
         this.permission = permission;
         this.s3_skinpointer = s3_skinpointer;
+        this.coins = coins;
         this.easymodeFastest = easymodeFastest;
         this.medmodeFastest = medmodeFastest;
         this.hardmodeFastest = hardmodeFastest;
@@ -90,10 +92,10 @@ public class AWSManager : MonoBehaviour
     [SerializeField] private string password = "mypassword";
     [SerializeField] private string permission = "admin";
     [SerializeField] private string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin";
+    [SerializeField] private string coins = "0";
     [SerializeField] private string easy = "0";
     [SerializeField] private string med = "0";
     [SerializeField] private string hard = "0";
-    [SerializeField] private int timing = 0;
 
     private void Awake()
     {
@@ -314,6 +316,7 @@ public class AWSManager : MonoBehaviour
         form.AddField("password", userPayload.password);
         form.AddField("permission", userPayload.permission);
         form.AddField("s3_skinpointer", userPayload.s3_skinpointer);
+        form.AddField("coins", userPayload.coins);
         form.AddField("easymodeFastest", userPayload.easymodeFastest);
         form.AddField("medmodeFastest", userPayload.medmodeFastest);
         form.AddField("hardmodeFastest", userPayload.hardmodeFastest);

@@ -52,6 +52,10 @@ namespace LevelManagement
                 LogIn(existingUsername, PlayerPrefs.GetString("cc2_password"), () =>
                 {
                     return;
+                }, () =>
+                {
+                    UINavigator.Push("NewUserLogin");
+                    ShowPageVert(UINavigator.Push("SignUp"), 3000f);
                 });
             }
             else
