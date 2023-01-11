@@ -80,6 +80,7 @@ namespace LevelManagement
                 });
             }
 
+            //Start menu buttons
             playButton.onClick.AddListener(() =>
             {
                 HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
@@ -89,9 +90,18 @@ namespace LevelManagement
             leaderboardButton.onClick.AddListener(() =>
             {
                 HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                ShowPageHori(UINavigator.Push("LeaderboardPage"));
+                ShowPageHori(UINavigator.Push("LeaderboardPage"), 6000);
             });
 
+            //Account buttons
+            accountButton.onClick.AddListener(() =>
+            {
+                HidePageHori(UINavigator.instance.Navigator.Peek(), -3000f);
+                ShowPageHori(UINavigator.Push("AccountPage"), 6000);
+            });
+
+
+            //Play menu buttons
             startButton.onClick.AddListener(() =>
             {
                 ShowPageVert(UINavigator.Push("LoadingScreen"), 3000, () =>
