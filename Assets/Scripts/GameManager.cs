@@ -21,4 +21,6 @@ public static class GameManager
     {
         UserPayload = userPayload;
     }
+
+    public static void SetSkin(string skinName) => UserPayload.s3_skinpointer = skinName;
 }

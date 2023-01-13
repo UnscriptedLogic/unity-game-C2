@@ -20,7 +20,6 @@ namespace PlayerManagement
         [SerializeField] private float maxPower = 200f;
 
         [Header("Components")]
-        [SerializeField] private string skinName = "defaultSkin";
         [SerializeField] private Rigidbody rb;  
         [SerializeField] private LineRenderer lineRenderer;
         [SerializeField] private Camera cam;
@@ -32,6 +31,7 @@ namespace PlayerManagement
             inputManager.isDragging += OnDragging;
             inputManager.mousePos += InputManager_mousePos;
 
+            string skinName = GameManager.UserPayload != null ? GameManager.UserPayload.s3_skinpointer : "defaultskin";
             StartCoroutine(AWSManager.instance.GetItemWithName(skinName, res =>
             {
                 StartCoroutine(AWSManager.instance.InstantiateObjectFromS3(res[0]["s3_skinpointer"]["S"].ToString(), skinName, transform, Vector3.zero, Quaternion.identity, go =>

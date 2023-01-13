@@ -7,6 +7,9 @@ using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using UnityEngine.Windows;
+using UnityEditor;
+using UnityEngine.UIElements;
+using UnityEngine.Rendering;
 
 public class UserPayload
 {
@@ -19,7 +22,7 @@ public class UserPayload
     public string medmodeFastest;
     public string hardmodeFastest;
 
-    public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin", string coins = "0", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
+    public UserPayload(string username, string password, string permission = "user", string s3_skinpointer = "defaultskin", string coins = "0", string easymodeFastest = "0", string medmodeFastest = "0", string hardmodeFastest = "0")
     {
         this.username = username;
         this.password = password;
@@ -48,7 +51,7 @@ public class AWSManager : MonoBehaviour
         public int timing;
         public string s3_skinpointer;
 
-        public LeaderboardPayload(DifficultyMode mode, string username = "", int timing = 0, string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin")
+        public LeaderboardPayload(DifficultyMode mode, string username = "", int timing = 0, string s3_skinpointer = "defaultskin")
         {
             switch (mode)
             {
@@ -91,7 +94,7 @@ public class AWSManager : MonoBehaviour
     [SerializeField] private string username = "HelloFromUnity";
     [SerializeField] private string password = "mypassword";
     [SerializeField] private string permission = "admin";
-    [SerializeField] private string s3_skinpointer = "https://c2-skins-bucket.s3.amazonaws.com/defaultskin";
+    [SerializeField] private string s3_skinpointer = "defaultskin";
     [SerializeField] private string coins = "0";
     [SerializeField] private string easy = "0";
     [SerializeField] private string med = "0";
@@ -119,8 +122,6 @@ public class AWSManager : MonoBehaviour
 
     public IEnumerator InstantiateObjectFromS3(string objectLink, string objectName, Transform parent, Vector3 position, Quaternion rotation, Action<GameObject> OnSuccess)
     {
-        Debug.Log(objectLink);
-
         UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(objectLink);
         www.downloadHandler = new DownloadHandlerAssetBundle(www.url, 0);
         www.SendWebRequest();
@@ -153,6 +154,28 @@ public class AWSManager : MonoBehaviour
         {
             Debug.Log(assetBundle);
         }
+    }
+
+    public IEnumerator GetIconFromS3Pointer(string url, Action<Sprite> OnSuccess, Action<string> OnError)
+    {
+        UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
+        yield return request.SendWebRequest();
+
+        while (!request.isDone)
+        {
+            yield return null;
+        }
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(request.downloadHandler.error);
+            OnError?.Invoke(request.error);
+            yield break;
+        }
+
+        Texture2D texture = DownloadHandlerTexture.GetContent(request);
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+        OnSuccess?.Invoke(sprite);
     }
 
     private IEnumerator SendAWSWebRequest(string route, WWWForm form, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnFailure = null, Action<UnityWebRequest> OnAny = null)

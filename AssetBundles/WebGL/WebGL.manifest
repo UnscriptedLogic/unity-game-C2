@@ -1,0 +1,10 @@
+ManifestFileVersion: 0
+CRC: 2336405469
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: defaultskin
+      Dependencies: {}
+    Info_1:
+      Name: orangeskin
+      Dependencies: {}
