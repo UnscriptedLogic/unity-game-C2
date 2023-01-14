@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,10 @@ public class UINavigator : MonoBehaviour
 
     public static UINavigator instance;
     public Stack<GameObject> Navigator => navigator;
+
+    [Header("Animation Settings")]
+    [SerializeField] private float transitionSpeed = 0.5f;
+    [SerializeField] private LeanTweenType tweenType;
 
     [Header("Debug")]
     [SerializeField] private bool enableScriptModify;
@@ -51,6 +56,18 @@ public class UINavigator : MonoBehaviour
         {
             GameObject page = instance.navigator.Peek();
             instance.navigator.Pop().SetActive(false);
+            return page;
+        }
+
+        return null;
+    }
+
+    public static GameObject PopWithoutDisable()
+    {
+        if (instance.navigator.Count > 0)
+        {
+            GameObject page = instance.navigator.Peek();
+            instance.navigator.Pop();
             return page;
         }
 
@@ -112,6 +129,51 @@ public class UINavigator : MonoBehaviour
 
         index = -1;
         return false;
+    }
+
+    public static void ShowPageVert(GameObject page, float from, Action OnCompleted = null)
+    {
+        float prevPos = page.transform.position.y;
+        page.transform.position = new Vector3(page.transform.position.x, from, page.transform.position.z);
+        LeanTween.moveY(page, prevPos, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() =>
+        {
+            if (OnCompleted != null)
+            {
+                OnCompleted();
+            }
+        });
+    }
+
+    public static void HidePageVert(GameObject page, float to = 3000f, Action onCompleted = null)
+    {
+        float prevPos = page.transform.position.y;
+        LeanTween.moveY(page, to, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() =>
+        {
+            page.SetActive(false);
+            page.transform.position = new Vector3(page.transform.position.x, prevPos, page.transform.position.z);
+
+            onCompleted?.Invoke();
+        });
+    }
+
+    public static void ShowPageHori(GameObject page, float from = 3000f)
+    {
+        float prevPos = page.transform.position.x;
+        page.transform.position = new Vector3(from, page.transform.position.y, page.transform.position.z);
+        LeanTween.moveX(page, prevPos, instance.transitionSpeed).setEase(instance.tweenType);
+    }
+
+    public static void HidePageHori(GameObject page, float to = 3000f, Action OnComplete = null)
+    {
+        float prevPos = page.transform.position.x;
+        PopWithoutDisable();
+        LeanTween.moveX(page, to, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() =>
+        {
+            page.transform.position = new Vector3(prevPos, page.transform.position.y, page.transform.position.z);
+            page.SetActive(false);
+
+            OnComplete?.Invoke();
+        });
     }
 
     private void OnValidate()

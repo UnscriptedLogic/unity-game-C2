@@ -34,10 +34,6 @@ namespace LevelManagement
 
         [SerializeField] private Button[] backToMainMenuButtons;
 
-        [Header("General Settings")]
-        [SerializeField] private float transitionSpeed = 0.5f;
-        [SerializeField] private LeanTweenType tweenType;
-
         private void Start()
         {
             UINavigator.Push("MainScreen");
@@ -49,17 +45,18 @@ namespace LevelManagement
                 //Try to sign in instead
                 LogIn(existingUsername, PlayerPrefs.GetString("cc2_password"), () =>
                 {
+                    
                     return;
                 }, () =>
                 {
                     UINavigator.Push("NewUserLogin");
-                    ShowPageVert(UINavigator.Push("SignUp"), 3000f);
+                    UINavigator.ShowPageVert(UINavigator.Push("SignUp"), 3000f);
                 });
             }
             else
             {
                 UINavigator.Push("NewUserLogin");
-                ShowPageVert(UINavigator.Push("SignUp"), 3000f);
+                UINavigator.ShowPageVert(UINavigator.Push("SignUp"), 3000f);
             }
 
             InitButtons();
@@ -73,36 +70,36 @@ namespace LevelManagement
             {
                 backToMainMenuButtons[i].onClick.AddListener(() =>
                 {
-                    HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                    ShowPageHori(UINavigator.Push("MainScreen"), -1920f);
+                    UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
+                    UINavigator.ShowPageHori(UINavigator.Push("MainScreen"), -1920f);
                 });
             }
 
             //Start menu buttons
             playButton.onClick.AddListener(() =>
             {
-                HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                ShowPageHori(UINavigator.Push("DifficultyScreen"), -1920f);
+                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
+                UINavigator.ShowPageHori(UINavigator.Push("DifficultyScreen"), -1920f);
             });
 
             leaderboardButton.onClick.AddListener(() =>
             {
-                HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                ShowPageHori(UINavigator.Push("LeaderboardPage"), 6000);
+                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
+                UINavigator.ShowPageHori(UINavigator.Push("LeaderboardPage"), 6000);
             });
 
             //Account buttons
             accountButton.onClick.AddListener(() =>
             {
-                HidePageHori(UINavigator.instance.Navigator.Peek(), -3000f);
-                ShowPageHori(UINavigator.Push("AccountPage"), 6000);
+                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -3000f);
+                UINavigator.ShowPageHori(UINavigator.Push("AccountPage"), 6000);
             });
 
 
             //Play menu buttons
             startButton.onClick.AddListener(() =>
             {
-                ShowPageVert(UINavigator.Push("LoadingScreen"), 3000, () =>
+                UINavigator.ShowPageVert(UINavigator.Push("LoadingScreen"), 3000, () =>
                 {
                     SceneManager.LoadSceneAsync(1);
                 });
@@ -110,14 +107,14 @@ namespace LevelManagement
 
             switchToLogin.onClick.AddListener(() =>
             {
-                HidePageHori(UINavigator.instance.Navigator.Peek(), -4000f);
-                ShowPageHori(UINavigator.Push("LogIn"), 4000f);
+                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -4000f);
+                UINavigator.ShowPageHori(UINavigator.Push("LogIn"), 4000f);
             });
 
             switchToSignUp.onClick.AddListener(() =>
             {
-                HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f);
-                ShowPageHori(UINavigator.Push("SignUp"), -3000f);
+                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f);
+                UINavigator.ShowPageHori(UINavigator.Push("SignUp"), -3000f);
             });
         }
 
@@ -171,9 +168,9 @@ namespace LevelManagement
                     //Generates a GUID for the computer so that it may recognize subsequent log ins
                     PlayerPrefs.SetString("cc2_username", userPayload.username);
                     PlayerPrefs.SetString("cc2_password", userPayload.password);
-                    
+
                     //Pops loading page
-                    HidePageVert(UINavigator.instance.Navigator.Peek());
+                    UINavigator.HidePageVert(UINavigator.instance.Navigator.Peek());
                     return;
                 }, OnFailure: err =>
                 {
@@ -230,11 +227,11 @@ namespace LevelManagement
                     GameManager.InitUser(userPayload);
                     GameManager.LogIn();
 
-                    PlayerPrefs.SetString("cc2_username", userPayload.username);
-                    PlayerPrefs.SetString("cc2_password", userPayload.password);
-
                     UINavigator.PopUntil("LoadingScreen");
-                    HidePageVert(UINavigator.instance.Navigator.Peek());
+                    UINavigator.HidePageVert(UINavigator.instance.Navigator.Peek(), 3000, () =>
+                    {
+                        UINavigator.PopUntil("MainScreen");
+                    });
 
                     OnSuccess?.Invoke();
                 }
@@ -259,48 +256,6 @@ namespace LevelManagement
 
             yield return new WaitForSeconds(3);
             errorTMP.gameObject.SetActive(false);
-        }
-
-        private void ShowPageVert(GameObject page, float from, Action OnCompleted = null)
-        {
-            float prevPos = page.transform.position.y;
-            page.transform.position = new Vector3(page.transform.position.x, from, page.transform.position.z);
-            LeanTween.moveY(page, prevPos, transitionSpeed).setEase(tweenType).setOnComplete(() =>
-            {
-                if (OnCompleted != null)
-                {
-                    OnCompleted();
-                }
-            });
-        }
-
-        private void HidePageVert(GameObject page, float to = 3000f, Action onCompleted = null)
-        {
-            float prevPos = page.transform.position.y;
-            LeanTween.moveY(page, to, transitionSpeed).setEase(tweenType).setOnComplete(() =>
-            {
-                page.SetActive(false);
-                page.transform.position = new Vector3(page.transform.position.x, prevPos, page.transform.position.z);
-
-                onCompleted?.Invoke();
-            });
-        }
-
-        private void ShowPageHori(GameObject page, float from = 3000f)
-        {
-            float prevPos = page.transform.position.x;
-            page.transform.position = new Vector3(from, page.transform.position.y, page.transform.position.z);
-            LeanTween.moveX(page, prevPos, transitionSpeed).setEase(tweenType);
-        }
-
-        private void HidePageHori(GameObject page, float to = 3000f)
-        {
-            float prevPos = page.transform.position.x;
-            LeanTween.moveX(page, to, transitionSpeed).setEase(tweenType).setOnComplete(() =>
-            {
-                page.SetActive(false);
-                page.transform.position = new Vector3(prevPos, page.transform.position.y, page.transform.position.z);
-            });
         }
     }
 }

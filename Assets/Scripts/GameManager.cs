@@ -15,6 +15,9 @@ public static class GameManager
     {
         isLoggedIn = true;
         OnLogInStatusChanged?.Invoke(isLoggedIn);
+
+        PlayerPrefs.SetString("cc2_username", UserPayload.username);
+        PlayerPrefs.SetString("cc2_password", UserPayload.password);
     }
 
     public static void InitUser(UserPayload userPayload)
@@ -23,4 +26,15 @@ public static class GameManager
     }
 
     public static void SetSkin(string skinName) => UserPayload.s3_skinpointer = skinName;
+
+    public static void SignOut()
+    {
+        PlayerPrefs.SetString("cc2_username", "");
+        PlayerPrefs.SetString("cc2_password", "");
+    }
+
+    public static void DeleteAccount()
+    {
+
+    }
 }
