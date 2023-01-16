@@ -9,6 +9,8 @@ public static class GameManager
     public static bool isLoggedIn = true;
     public const string GUID_NAME = "cc2_guid";
 
+    public static DifficultyMode DifficultyMode;
+
     public static Action<bool> OnLogInStatusChanged;
     
     public static void LogIn()
@@ -31,10 +33,5 @@ public static class GameManager
     {
         PlayerPrefs.SetString("cc2_username", "");
         PlayerPrefs.SetString("cc2_password", "");
-    }
-
-    public static void DeleteAccount()
-    {
-
     }
 }

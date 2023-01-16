@@ -35,15 +35,15 @@ public class UserPayload
     }
 }
 
+public enum DifficultyMode
+{
+    Easy,
+    Medium,
+    Hard
+}
+
 public class AWSManager : MonoBehaviour
 {
-    public enum DifficultyMode
-    {
-        Easy,
-        Medium,
-        Hard
-    }
-
     public struct LeaderboardPayload
     {
         public string mode;
@@ -231,7 +231,7 @@ public class AWSManager : MonoBehaviour
     }
 
     #region User Methods
-    private IEnumerator DeleteUserByUsername(string username)
+    public IEnumerator DeleteUserByUsername(string username, Action OnSuccess = null, Action<UnityWebRequest> OnError = null)
     {
         bool userExists = false;
 
@@ -253,11 +253,14 @@ public class AWSManager : MonoBehaviour
 
         yield return StartCoroutine(SendAWSWebRequest("users", deleteForm, res =>
         {
-            Log.Print(res.downloadHandler.text, Log.AWS_TOPIC_SUCCESS);
+            OnSuccess?.Invoke();
+        }, err =>
+        {
+            OnError?.Invoke(err);
         }));
     }
 
-    private IEnumerator UpdateUserByUsername(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null)
+    public IEnumerator UpdateUserByUsername(UserPayload userPayload, Action<string> OnSuccess = null, Action<string> OnFailure = null)
     {
         bool userExists = false;
 

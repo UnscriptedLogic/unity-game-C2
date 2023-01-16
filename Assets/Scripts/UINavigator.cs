@@ -116,6 +116,16 @@ public class UINavigator : MonoBehaviour
         return null;
     }
 
+    public static GameObject GetTopPage()
+    {
+        if (instance.navigator.Count > 0)
+        {
+            return instance.navigator.Peek();
+        }
+
+        return null;
+    }
+
     public static bool PageExists(string pageName, out int index)
     {
         for (int i = 0; i < instance.pages.Count; i++)

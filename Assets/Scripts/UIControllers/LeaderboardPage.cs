@@ -20,7 +20,7 @@ namespace UIManagement
 
         private void Start()
         {
-            StartCoroutine(AWSManager.instance.GetAllLeaderboardScore(new AWSManager.LeaderboardPayload(mode: AWSManager.DifficultyMode.Easy), OnSuccess: res =>
+            StartCoroutine(AWSManager.instance.GetAllLeaderboardScore(new AWSManager.LeaderboardPayload(mode: DifficultyMode.Easy), OnSuccess: res =>
             {
                 for (int i = 0; i < res.Count; i++)
                 {

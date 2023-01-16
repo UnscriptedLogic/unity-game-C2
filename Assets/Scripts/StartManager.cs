@@ -17,6 +17,11 @@ namespace LevelManagement
 
         [SerializeField] private Button startButton;
 
+        [Header("Difficulty Mode Selection")]
+        [SerializeField] private Button easyMode;
+        [SerializeField] private Button medMode;
+        [SerializeField] private Button hardMode;
+
         [Header("Form Fields(Sign Up)")]
         [SerializeField] private TMP_InputField signupUsername;
         [SerializeField] private TMP_InputField signupPassword;
@@ -50,7 +55,7 @@ namespace LevelManagement
                 }, () =>
                 {
                     UINavigator.Push("NewUserLogin");
-                    UINavigator.ShowPageVert(UINavigator.Push("SignUp"), 3000f);
+                    UINavigator.ShowPageVert(UINavigator.Push("LogIn"), 3000f);
                 });
             }
             else
@@ -104,6 +109,11 @@ namespace LevelManagement
                     SceneManager.LoadSceneAsync(1);
                 });
             });
+
+            //Difficulty Select Buttons
+            easyMode.onClick.AddListener(() => GameManager.DifficultyMode = DifficultyMode.Easy);
+            medMode.onClick.AddListener(() => GameManager.DifficultyMode = DifficultyMode.Medium);
+            hardMode.onClick.AddListener(() => GameManager.DifficultyMode = DifficultyMode.Hard);
 
             switchToLogin.onClick.AddListener(() =>
             {
