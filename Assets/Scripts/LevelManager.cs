@@ -40,7 +40,7 @@ namespace LevelManagement
             UINavigator.HidePageVert(UINavigator.GetTopPage());
         }
 
-        private void LevelCompleted()
+        public void LevelCompleted()
         {
 
         }

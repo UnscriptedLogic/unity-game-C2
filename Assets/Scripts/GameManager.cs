@@ -34,4 +34,26 @@ public static class GameManager
         PlayerPrefs.SetString("cc2_username", "");
         PlayerPrefs.SetString("cc2_password", "");
     }
+
+    public static void UpdateScore(float timing)
+    {
+        switch (DifficultyMode)
+        {
+            case DifficultyMode.Easy:
+
+                UserPayload.easymodeFastest = Mathf.Max(float.Parse(UserPayload.easymodeFastest), timing).ToString();
+                break;
+            
+            case DifficultyMode.Medium:
+                UserPayload.medmodeFastest = Mathf.Max(float.Parse(UserPayload.medmodeFastest), timing).ToString();
+                break;
+         
+            case DifficultyMode.Hard:
+                UserPayload.hardmodeFastest = Mathf.Max(float.Parse(UserPayload.hardmodeFastest), timing).ToString();
+                break;
+            
+            default:
+                break;
+        }
+    }
 }
