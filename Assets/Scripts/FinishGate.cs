@@ -1,3 +1,4 @@
+using Amazon.S3.Model;
 using LevelManagement;
 using System.Collections;
 using System.Collections.Generic;
@@ -5,9 +6,9 @@ using UnityEngine;
 
 public class FinishGate : MonoBehaviour
 {
-    private void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Player"))
         {
             LevelManager.instance.LevelCompleted();
         }

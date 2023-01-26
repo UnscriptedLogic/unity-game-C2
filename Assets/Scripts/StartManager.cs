@@ -44,67 +44,71 @@ namespace LevelManagement
             UINavigator.Push("MainScreen");
             UINavigator.Push("LoadingScreen");
 
+            CheckForExistingUser();
+
+            InitMenuButtons();
+            InitSubmitForms();
+        }
+
+        private void CheckForExistingUser()
+        {
             string existingUsername = PlayerPrefs.GetString("cc2_username");
             if (!string.IsNullOrEmpty(existingUsername))
             {
                 //Try to sign in instead
                 LogIn(existingUsername, PlayerPrefs.GetString("cc2_password"), () =>
                 {
-                    
                     return;
                 }, () =>
                 {
                     UINavigator.Push("NewUserLogin");
-                    UINavigator.ShowPageVert(UINavigator.Push("LogIn"), 3000f);
+                    UINavigator.ShowPageVert("LogIn", 3000f);
                 });
             }
             else
             {
                 UINavigator.Push("NewUserLogin");
-                UINavigator.ShowPageVert(UINavigator.Push("SignUp"), 3000f);
+                UINavigator.ShowPageVert("SignUp", 3000f);
             }
-
-            InitButtons();
-            InitSubmitForms();
         }
 
-        private void InitButtons()
+        private void InitMenuButtons()
         {
             //Back buttons to the main screen
             for (int i = 0; i < backToMainMenuButtons.Length; i++)
             {
                 backToMainMenuButtons[i].onClick.AddListener(() =>
                 {
-                    UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                    UINavigator.ShowPageHori(UINavigator.Push("MainScreen"), -1920f);
+                    UINavigator.HidePageHori(-1920f);
+                    UINavigator.ShowPageHori("MainScreen", -1920f);
                 });
             }
 
             //Start menu buttons
             playButton.onClick.AddListener(() =>
             {
-                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                UINavigator.ShowPageHori(UINavigator.Push("DifficultyScreen"), -1920f);
+                UINavigator.HidePageHori(-1920f);
+                UINavigator.ShowPageHori("DifficultyScreen", -1920f);
             });
 
             leaderboardButton.onClick.AddListener(() =>
             {
-                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -1920f);
-                UINavigator.ShowPageHori(UINavigator.Push("LeaderboardPage"), 6000);
+                UINavigator.HidePageHori(-1920f);
+                UINavigator.ShowPageHori("LeaderboardPage", 6000);
             });
 
             //Account buttons
             accountButton.onClick.AddListener(() =>
             {
-                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -3000f);
-                UINavigator.ShowPageHori(UINavigator.Push("AccountPage"), 6000);
+                UINavigator.HidePageHori(-3000f);
+                UINavigator.ShowPageHori("AccountPage", 6000);
             });
 
 
             //Play menu buttons
             startButton.onClick.AddListener(() =>
             {
-                UINavigator.ShowPageVert(UINavigator.Push("LoadingScreen"), 3000, () =>
+                UINavigator.ShowPageVert("LoadingScreen", 3000, () =>
                 {
                     SceneManager.LoadSceneAsync(1);
                 });
@@ -117,14 +121,14 @@ namespace LevelManagement
 
             switchToLogin.onClick.AddListener(() =>
             {
-                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), -4000f);
-                UINavigator.ShowPageHori(UINavigator.Push("LogIn"), 4000f);
+                UINavigator.HidePageHori(-4000f);
+                UINavigator.ShowPageHori("LogIn", 4000f);
             });
 
             switchToSignUp.onClick.AddListener(() =>
             {
-                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f);
-                UINavigator.ShowPageHori(UINavigator.Push("SignUp"), -3000f);
+                UINavigator.HidePageHori(3000f);
+                UINavigator.ShowPageHori("SignUp", -3000f);
             });
         }
 
@@ -180,7 +184,7 @@ namespace LevelManagement
                     PlayerPrefs.SetString("cc2_password", userPayload.password);
 
                     //Pops loading page
-                    UINavigator.HidePageVert(UINavigator.instance.Navigator.Peek());
+                    UINavigator.HidePageVert();
                     return;
                 }, OnFailure: err =>
                 {
@@ -191,7 +195,6 @@ namespace LevelManagement
             submitLogIn.onClick.AddListener(() =>
             {
                 #region Input Validation
-
                 string username = loginUsername.text;
                 string password = loginPassword.text;
 
@@ -206,12 +209,10 @@ namespace LevelManagement
                     StartCoroutine(ShowFeedback("Please input a password"));
                     return;
                 }
+                #endregion
 
                 StartCoroutine(ShowFeedback("Logging In..."));
-
                 LogIn(username, password);
-
-                #endregion
             });
         }
 
@@ -219,7 +220,7 @@ namespace LevelManagement
         {
             StartCoroutine(AWSManager.instance.GetUserByName(username, res =>
             {
-                Debug.Log(res);
+                //Debug.Log(res);
                 if (password == res[0]["password"].ToString())
                 {
                     StartCoroutine(ShowFeedback("Welcome back! Logging you in..."));
@@ -238,7 +239,7 @@ namespace LevelManagement
                     GameManager.LogIn();
 
                     UINavigator.PopUntil("LoadingScreen");
-                    UINavigator.HidePageVert(UINavigator.instance.Navigator.Peek(), 3000, () =>
+                    UINavigator.HidePageVert(3000, () =>
                     {
                         UINavigator.PopUntil("MainScreen");
                     });

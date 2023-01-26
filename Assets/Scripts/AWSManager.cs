@@ -48,10 +48,10 @@ public class AWSManager : MonoBehaviour
     {
         public string mode;
         public string username;
-        public int timing;
+        public float timing;
         public string s3_skinpointer;
 
-        public LeaderboardPayload(DifficultyMode mode, string username = "", int timing = 0, string s3_skinpointer = "defaultskin")
+        public LeaderboardPayload(DifficultyMode mode, string username = "", float timing = 0, string s3_skinpointer = "defaultskin")
         {
             switch (mode)
             {
@@ -91,15 +91,6 @@ public class AWSManager : MonoBehaviour
 
     public static AWSManager instance;
 
-    [SerializeField] private string username = "HelloFromUnity";
-    [SerializeField] private string password = "mypassword";
-    [SerializeField] private string permission = "admin";
-    [SerializeField] private string s3_skinpointer = "defaultskin";
-    [SerializeField] private string coins = "0";
-    [SerializeField] private string easy = "0";
-    [SerializeField] private string med = "0";
-    [SerializeField] private string hard = "0";
-
     private void Awake()
     {
         instance = this;
@@ -120,7 +111,7 @@ public class AWSManager : MonoBehaviour
         //StartCoroutine(GetAllItems(res => Debug.Log(res), err => Debug.Log(err.downloadHandler.text)));
     }
 
-    public IEnumerator InstantiateObjectFromS3(string objectLink, string objectName, Transform parent, Vector3 position, Quaternion rotation, Action<GameObject> OnSuccess)
+    public IEnumerator InstantiateObjectFromS3(string objectLink, string objectName, Transform parent, Vector3 position, Quaternion rotation, Action<GameObject, AssetBundle> OnSuccess)
     {
         UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(objectLink);
         www.downloadHandler = new DownloadHandlerAssetBundle(www.url, 0);
@@ -137,7 +128,6 @@ public class AWSManager : MonoBehaviour
             yield break;
         }
 
-        //AssetBundle assetBundle = (www.downloadHandler as DownloadHandlerAssetBundle).assetBundle;
         AssetBundle assetBundle = DownloadHandlerAssetBundle.GetContent(www);
         if (assetBundle != null)
         {
@@ -145,7 +135,9 @@ public class AWSManager : MonoBehaviour
             GameObject prefab = assetBundle.LoadAsset<GameObject>(objectName);
             if (prefab != null)
             {
-                OnSuccess?.Invoke(Instantiate(prefab, position, rotation, parent));
+                OnSuccess?.Invoke(Instantiate(prefab, position, rotation, parent), assetBundle);
+                assetBundle.Unload(false);
+                
             } else
             {
                 Debug.Log(prefab);
@@ -156,7 +148,7 @@ public class AWSManager : MonoBehaviour
         }
     }
 
-    public IEnumerator GetIconFromS3Pointer(string url, Action<Sprite> OnSuccess, Action<string> OnError)
+    public IEnumerator GetIconFromS3Pointer(string url, Action<Sprite> OnSuccess, Action<string> OnError = null)
     {
         UnityWebRequest request = UnityWebRequestTexture.GetTexture(url);
         yield return request.SendWebRequest();
@@ -173,9 +165,28 @@ public class AWSManager : MonoBehaviour
             yield break;
         }
 
+        Debug.Log(request);
         Texture2D texture = DownloadHandlerTexture.GetContent(request);
         Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
         OnSuccess?.Invoke(sprite);
+    }
+
+    public IEnumerator LoadImageFromURL(string url)
+    {
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError(www.downloadHandler.error);
+            Debug.LogError(www.downloadedBytes);
+        }
+        else
+        {
+            Texture2D texture = ((DownloadHandlerTexture)www.downloadHandler).texture;
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2());
+            
+        }
     }
 
     private IEnumerator SendAWSWebRequest(string route, WWWForm form, Action<UnityWebRequest> OnSuccess = null, Action<UnityWebRequest> OnFailure = null, Action<UnityWebRequest> OnAny = null)
@@ -284,7 +295,7 @@ public class AWSManager : MonoBehaviour
 
     public IEnumerator GetUserByName(string username, Action<JArray> OnSuccess = null, Action<string> OnFailure = null)
     {
-        Debug.Log($"Getting user by username: {username}...");
+        //Debug.Log($"Getting user by username: {username}...");
 
         WWWForm form = new WWWForm();
         form.AddField("operation", "getOne");
@@ -347,7 +358,7 @@ public class AWSManager : MonoBehaviour
         form.AddField("medmodeFastest", userPayload.medmodeFastest);
         form.AddField("hardmodeFastest", userPayload.hardmodeFastest);
 
-        yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess(res.downloadHandler.text.ToString()), OnFailure: res => OnFailure(res.downloadHandler.text.ToString())));
+        yield return StartCoroutine(SendAWSWebRequest("users", form, OnSuccess: res => OnSuccess?.Invoke(res.downloadHandler.text.ToString()), OnFailure: res => OnFailure?.Invoke(res.downloadHandler.text.ToString())));
     }
 
     #endregion
@@ -359,7 +370,7 @@ public class AWSManager : MonoBehaviour
         form.AddField("operation", "get");
         form.AddField("mode", leaderboardPayload.mode);
         form.AddField("username", leaderboardPayload.username);
-        form.AddField("timing", leaderboardPayload.timing);
+        form.AddField("timing", (int)leaderboardPayload.timing);
 
         yield return StartCoroutine(SendAWSWebRequest("leaderboard-easy", form, res =>
         {
@@ -400,13 +411,13 @@ public class AWSManager : MonoBehaviour
         }));
     }
 
-    private IEnumerator UpdateUserScore(LeaderboardPayload leaderboardPayload, Action OnSuccess = null, Action OnError = null)
+    public IEnumerator UpdateUserScore(LeaderboardPayload leaderboardPayload, Action OnSuccess = null, Action OnError = null)
     {
         WWWForm form = new WWWForm();
         form.AddField("operation", "update");
         form.AddField("mode", leaderboardPayload.mode);
         form.AddField("username", leaderboardPayload.username);
-        form.AddField("timing", leaderboardPayload.timing);
+        form.AddField("timing", (int)leaderboardPayload.timing);
         form.AddField("s3_skinpointer", leaderboardPayload.s3_skinpointer);
 
         yield return StartCoroutine(SendAWSWebRequest("leaderboard-easy", form, res =>
@@ -430,7 +441,7 @@ public class AWSManager : MonoBehaviour
         WWWForm form = new WWWForm();
         form.AddField("operation", "delete");
         form.AddField("username", leaderboardPayload.username);
-        form.AddField("timing", leaderboardPayload.timing);
+        form.AddField("timing", (int)leaderboardPayload.timing);
 
         yield return StartCoroutine(SendAWSWebRequest("leaderboard-easy", form, res =>
         {

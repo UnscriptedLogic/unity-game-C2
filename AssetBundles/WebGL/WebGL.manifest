@@ -1,5 +1,5 @@
 ManifestFileVersion: 0
-CRC: 2336405469
+CRC: 1103900301
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
@@ -7,4 +7,13 @@ AssetBundleManifest:
       Dependencies: {}
     Info_1:
       Name: orangeskin
+      Dependencies: {}
+    Info_2:
+      Name: blue
+      Dependencies: {}
+    Info_3:
+      Name: green
+      Dependencies: {}
+    Info_4:
+      Name: physicsbox
       Dependencies: {}

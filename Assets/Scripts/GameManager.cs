@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using static AWSManager;
 
 public static class GameManager
 {
@@ -35,25 +36,53 @@ public static class GameManager
         PlayerPrefs.SetString("cc2_password", "");
     }
 
-    public static void UpdateScore(float timing)
+    public static bool HasNewHighScore(float time)
     {
         switch (DifficultyMode)
         {
             case DifficultyMode.Easy:
 
-                UserPayload.easymodeFastest = Mathf.Max(float.Parse(UserPayload.easymodeFastest), timing).ToString();
+                return float.Parse(UserPayload.easymodeFastest) > time;
+
+            case DifficultyMode.Medium:
+                return float.Parse(UserPayload.medmodeFastest) > time;
+
+            case DifficultyMode.Hard:
+                return float.Parse(UserPayload.hardmodeFastest) > time;
+
+            default:
+                return false;
+        }
+    }
+
+    public static LeaderboardPayload ParseScore(float timing)
+    {
+        LeaderboardPayload payload = new LeaderboardPayload();
+        payload.username = UserPayload.username;
+        payload.timing = timing;
+        payload.s3_skinpointer = UserPayload.s3_skinpointer;
+
+        switch (DifficultyMode)
+        {
+            case DifficultyMode.Easy:
+                UserPayload.easymodeFastest = Mathf.Min(float.Parse(UserPayload.easymodeFastest), timing).ToString();
+                payload.mode = "leaderboard-easy";
                 break;
             
             case DifficultyMode.Medium:
-                UserPayload.medmodeFastest = Mathf.Max(float.Parse(UserPayload.medmodeFastest), timing).ToString();
+                UserPayload.medmodeFastest = Mathf.Min(float.Parse(UserPayload.medmodeFastest), timing).ToString();
+                payload.mode = "leaderboard-medium";
                 break;
          
             case DifficultyMode.Hard:
-                UserPayload.hardmodeFastest = Mathf.Max(float.Parse(UserPayload.hardmodeFastest), timing).ToString();
+                UserPayload.hardmodeFastest = Mathf.Min(float.Parse(UserPayload.hardmodeFastest), timing).ToString();
+                payload.mode = "leaderboard-hard";
                 break;
             
             default:
                 break;
         }
+
+        return payload;
     }
 }

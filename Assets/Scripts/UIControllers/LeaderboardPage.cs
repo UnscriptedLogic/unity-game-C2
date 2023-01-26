@@ -25,7 +25,7 @@ namespace UIManagement
                 for (int i = 0; i < res.Count; i++)
                 {
                     GameObject score = Instantiate(scoreCard, scoreParent);
-                    score.GetComponent<ScoreCard>().Initialize(i + 1, null, res[i]["username"]["S"].ToString());
+                    score.GetComponent<ScoreCard>().Initialize(i + 1, null, res[i]["username"]["S"].ToString(), $"{res[i]["timing"]["N"]}s");
                 }
             }, err =>
             {

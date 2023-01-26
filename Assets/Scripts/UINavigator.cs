@@ -141,8 +141,9 @@ public class UINavigator : MonoBehaviour
         return false;
     }
 
-    public static void ShowPageVert(GameObject page, float from, Action OnCompleted = null)
+    public static void ShowPageVert(string pagename, float from, Action OnCompleted = null)
     {
+        GameObject page = Push(pagename);
         float prevPos = page.transform.position.y;
         page.transform.position = new Vector3(page.transform.position.x, from, page.transform.position.z);
         LeanTween.moveY(page, prevPos, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() =>
@@ -154,8 +155,9 @@ public class UINavigator : MonoBehaviour
         });
     }
 
-    public static void HidePageVert(GameObject page, float to = 3000f, Action onCompleted = null)
+    public static void HidePageVert(float to = 3000f, Action onCompleted = null)
     {
+        GameObject page = instance.navigator.Peek();
         float prevPos = page.transform.position.y;
         LeanTween.moveY(page, to, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() =>
         {
@@ -166,15 +168,17 @@ public class UINavigator : MonoBehaviour
         });
     }
 
-    public static void ShowPageHori(GameObject page, float from = 3000f)
+    public static void ShowPageHori(string pagename, float from = 3000f, Action OnCompleted = null)
     {
+        GameObject page = Push(pagename);
         float prevPos = page.transform.position.x;
         page.transform.position = new Vector3(from, page.transform.position.y, page.transform.position.z);
-        LeanTween.moveX(page, prevPos, instance.transitionSpeed).setEase(instance.tweenType);
+        LeanTween.moveX(page, prevPos, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() => OnCompleted?.Invoke());
     }
 
-    public static void HidePageHori(GameObject page, float to = 3000f, Action OnComplete = null)
+    public static void HidePageHori(float to = 3000f, Action OnComplete = null)
     {
+        GameObject page = instance.navigator.Peek();
         float prevPos = page.transform.position.x;
         PopWithoutDisable();
         LeanTween.moveX(page, to, instance.transitionSpeed).setEase(instance.tweenType).setOnComplete(() =>

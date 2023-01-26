@@ -39,41 +39,46 @@ namespace UIManagement
         [SerializeField] private Color successColor;
         [SerializeField] private Color errorColor;
 
-        private void Awake()
+        private void OnEnable()
         {
             GameManager.OnLogInStatusChanged += OnLoggedIn;
+        }
+
+        private void OnDisable()
+        {
+            GameManager.OnLogInStatusChanged -= OnLoggedIn;
         }
 
         private void Start()
         {
             signOutAccount.onClick.AddListener(() =>
             {
-                UINavigator.ShowPageVert(UINavigator.Push("ConfirmSignOut"), 3000f);
+                UINavigator.ShowPageVert("ConfirmSignOut", 3000f);
             });
 
             updateAccount.onClick.AddListener(() =>
             {
                 feedbackTMP.gameObject.SetActive(false);
                 usernameTMP.text = $"{GameManager.UserPayload.username} - cannot be changed";
-                UINavigator.ShowPageVert(UINavigator.Push("UpdateAccount"), 3000f);
+                UINavigator.ShowPageVert("UpdateAccount", 3000f);
             });
 
             deleteAccount.onClick.AddListener(() =>
             {
-                UINavigator.ShowPageVert(UINavigator.Push("ConfirmDeleteAccount"), 3000f);
+                UINavigator.ShowPageVert("ConfirmDeleteAccount", 3000f);
             });
 
             ConfirmSignOut.onClick.AddListener(() =>
             {
                 GameManager.SignOut();
-                UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f, () =>
+                UINavigator.HidePageHori(3000f, () =>
                 {
                     UINavigator.PopAll();
                     UINavigator.Push("MainScreen");
-                    UINavigator.ShowPageVert(UINavigator.Push("LoadingScreen"), 3000f, () =>
+                    UINavigator.ShowPageVert("LoadingScreen", 3000f, () =>
                     {
                         UINavigator.Push("NewUserLogin");
-                        UINavigator.ShowPageVert(UINavigator.Push("SignUp"), 3000f);
+                        UINavigator.ShowPageVert("SignUp", 3000f);
                     });
                 });
             });
@@ -126,7 +131,7 @@ namespace UIManagement
                         StartCoroutine(ShowFeedback("Account Updated", successColor, 1f, () => 
                         {
                             StopAllCoroutines();
-                            UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f, () => inputGaurd.SetActive(false));
+                            UINavigator.HidePageHori(3000f, () => inputGaurd.SetActive(false));
                         }));
 
                         GameManager.InitUser(updatedUserPayload);
@@ -149,14 +154,14 @@ namespace UIManagement
                 StartCoroutine(AWSManager.instance.DeleteUserByUsername(GameManager.UserPayload.username, () =>
                 {
                     GameManager.SignOut();
-                    UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek(), 3000f, () =>
+                    UINavigator.HidePageHori(3000f, () =>
                     {
                         UINavigator.PopAll();
                         UINavigator.Push("MainScreen");
-                        UINavigator.ShowPageVert(UINavigator.Push("LoadingScreen"), 3000f, () =>
+                        UINavigator.ShowPageVert("LoadingScreen", 3000f, () =>
                         {
                             UINavigator.Push("NewUserLogin");
-                            UINavigator.ShowPageVert(UINavigator.Push("SignUp"), 3000f);
+                            UINavigator.ShowPageVert("SignUp", 3000f);
                         });
                     });
                 }));
@@ -166,7 +171,7 @@ namespace UIManagement
             {
                 cancelButtons[i].onClick.AddListener(() =>  
                 {
-                    UINavigator.HidePageHori(UINavigator.instance.Navigator.Peek());
+                    UINavigator.HidePageHori();
                 });
             }
         }
@@ -193,6 +198,10 @@ namespace UIManagement
                     skinButton.GetComponentInChildren<TextMeshProUGUI>().text = skinName;
 
                     //TODO: Figure out how to download sprites across the net
+                    StartCoroutine(AWSManager.instance.GetIconFromS3Pointer(res[i]["s3_pngpointer"]["S"].ToString(), sprite =>
+                    {
+                        skinButton.transform.GetChild(2).GetComponent<Image>().sprite = sprite;
+                    }));
 
                     skinButton.GetComponent<Button>().onClick.AddListener(() =>
                     {

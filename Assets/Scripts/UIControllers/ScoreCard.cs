@@ -11,12 +11,14 @@ namespace UIManagement
         [SerializeField] private TextMeshProUGUI rank;
         [SerializeField] private Image icon;
         [SerializeField] private TextMeshProUGUI username;
+        [SerializeField] private TextMeshProUGUI timingTMP;
 
-        public void Initialize(int rank, Sprite icon, string username)
+        public void Initialize(int rank, Sprite icon, string username, string timing)
         {
             this.rank.text = $"#{rank}";
             this.icon.sprite = icon;
             this.username.text = username;
+            timingTMP.text = timing;
         }
     }
 }
